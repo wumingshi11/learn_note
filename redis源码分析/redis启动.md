@@ -74,3 +74,5 @@ server.el = aeCreateEventLoop(server.maxclients+REDIS_EVENTLOOP_FDSET_INCR);
 6. 客户端超时处理
 7. 复制重连？？？
 8. 更新看门狗
+9. 关闭需要异步关闭的客户端
+10. 维持主服务器和从服务器的心跳
