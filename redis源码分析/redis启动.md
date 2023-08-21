@@ -73,3 +73,4 @@ server.el = aeCreateEventLoop(server.maxclients+REDIS_EVENTLOOP_FDSET_INCR);
 5. 触发BGSAVE和rewrite, 并处理之前的子进程
 6. 客户端超时处理
 7. 复制重连？？？
+8. 更新看门狗
