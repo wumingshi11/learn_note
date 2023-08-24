@@ -1,0 +1,63 @@
+# 命令执行 processCommand
+## 命令行的结构
+```c
+struct redisCommand {
+    char *name;
+    redisCommandProc *proc;
+    int arity;
+    // redis中不同的角色可以执行不同的flagsd的命令
+    char *sflags; /* Flags as string representation, one char per flag. */
+    int flags;    /* The actual flags, obtained from the 'sflags' field. 
+    /* Use a function to determine keys arguments in a command line.
+     * Used for Redis Cluster redirect. */
+    redisGetKeysProc *getkeys_proc;
+
+    /* What keys should be loaded in background when calling this command? */
+    int firstkey; /* The first argument that's a key (0 = no keys) */
+    int lastkey;  /* The last argument that's a key */
+    int keystep;  /* The step between first and last key */
+
+    long long microseconds, calls;
+};
+```
+## 初始化
+```c
+    server.commands = dictCreate(&commandTableDictType,NULL);
+    server.orig_commands = dictCreate(&commandTableDictType,NULL);
+    populateCommandTable(); //添加所有命令
+```
+redisCommandTable 存储了所有命令
+```c
+   int numcommands = sizeof(redisCommandTable)/sizeof(struct redisCommand);
+
+    for (j = 0; j < numcommands; j++) {
+        struct redisCommand *c = redisCommandTable+j;
+        retval1 = dictAdd(server.commands, sdsnew(c->name), c);
+        retval2 = dictAdd(server.orig_commands, sdsnew(c->name), c);
+        redisAssert(retval1 == DICT_OK && retval2 == DICT_OK);
+    }
+```
+## 执行 以get为例
+struct redisCommand redisCommandTable[] = {
+    {"get",getCommand,2,"r",0,NULL,1,1,1,0,0},  注册信息
+
+```c
+int getGenericCommand(redisClient *c) {
+    robj *o;
+
+    // 尝试从数据库中取出键 c->argv[1] 对应的值对象
+    // 如果键不存在时，向客户端发送回复信息，并返回 NULL
+    if ((o = lookupKeyReadOrReply(c,c->argv[1],shared.nullbulk)) == NULL)
+        return REDIS_OK;
+
+    // 值对象存在，检查它的类型
+    if (o->type != REDIS_STRING) {
+        // 类型错误
+        addReply(c,shared.wrongtypeerr);
+        return REDIS_ERR;
+    } else {
+        // 类型正确，向客户端返回对象的值
+        addReplyBulk(c,o);
+        return REDIS_OK;
+    }
+}```
