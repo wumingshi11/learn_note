@@ -38,6 +38,8 @@ redisCommandTable 存储了所有命令
     }
 ```
 ## 执行 以get为例
+
+###liuc 
 struct redisCommand redisCommandTable[] = {
     {"get",getCommand,2,"r",0,NULL,1,1,1,0,0},  注册信息
 
