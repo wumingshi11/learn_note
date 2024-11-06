@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package file_transfer;
+
+
+message FileChunk {
+  bytes chunk_data = 1;
+  int64 offset = 2;
+  int64 total_size = 3;
+}
+
+
+message TransferResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+
+service FileTransfer {
+  rpc UploadFile(stream FileChunk) returns (TransferResponse) {}
+  rpc DownloadFile(FileChunk) returns (stream FileChunk) {}
+}

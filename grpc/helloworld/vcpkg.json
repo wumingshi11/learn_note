@@ -1,0 +1,10 @@
+{
+  "dependencies": [
+    "fmt",
+    "gflags",
+    "grpc",
+    "gtest",
+    "spdlog",
+    "zlib"
+  ]
+}
