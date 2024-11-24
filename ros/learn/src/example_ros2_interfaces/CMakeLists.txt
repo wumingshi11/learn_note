@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(example_cpp)
+project(example_ros2_interfaces)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
@@ -7,11 +7,12 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
-find_package(rclcpp REQUIRED)
-# 标准消息
-find_package(std_msgs REQUIRED)
-# 自定义消息
-find_package(example_ros2_interfaces REQUIRED)
+find_package(rosidl_default_generators REQUIRED)
+
+# 添加下面的内容
+rosidl_generate_interfaces(${PROJECT_NAME}
+  "msg/SelfTestMsg.msg"
+)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
@@ -26,18 +27,4 @@ if(BUILD_TESTING)
 endif()
 
 ament_package()
-
-include_directories($<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>)
-
-add_executable(node_01 src/node1.cpp)
-ament_target_dependencies(node_01 rclcpp std_msgs example_ros2_interfaces)
-add_executable(node_02 src/node2.cpp)
-ament_target_dependencies(node_02 rclcpp std_msgs example_ros2_interfaces)
-# 安装到工作空间的目录下
-install(TARGETS
-  node_01
-  node_02
-  DESTINATION lib/${PROJECT_NAME}
-)
 
