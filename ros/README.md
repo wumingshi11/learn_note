@@ -17,7 +17,7 @@ ros2中构建工具主要有colcon和ament_python,ament_cmake。三者的区别�
 1. 协作：colcon 负责管理和协调多个软件包的构建过程，而 ament_cmake 则负责每个软件包内部的构建细节。
 2. 集成：colcon 可以调用 ament_cmake 来构建使用CMake的ROS 2包。当您运行 colcon build 时，colcon 会遍历所有需要构建的包，并调用 ament_cmake 来处理每个包的构建逻辑。
 3. 灵活性：colcon 支持多种构建工具，ament_cmake 是其中的一种。这意味着您可以在同一个项目中使用不同的构建工具，例如 ament_python 用于Python包，而 ament_cmake 用于C++包。
-### 构建步骤
+## 创建功能包和节点
 ```sh
 #1. 创建工作空间,可以简单理解为一个目录
 mkdir -p ~/ros2_ws
@@ -54,4 +54,54 @@ ros pkg executables <pkg name>   Output a list of package specific executables
 ros pkg list <pkg name>         Output a list of available packages
 ros pkg prefix <pkg name>       Output the prefix path of a package
 ros pkg xml <pkg name>          Output the XML of the package manifest or a specific tag
+```
+
+## 自定义消息
+### 创建（以topic消息为例，其他类似）
+1. 接口功能包，可单独创建
+```sh
+# 创建接口包
+ros2 pkg create example_ros2_interfaces --build-type ament_cmake --dependencies rosidl_default_generators
+```
+2. 创建接口文件
+```msg
+uint32 status_move
+uint32 status_stop
+uint32  status
+float32 pose
+```
+3. 修改cmake文件
+```cmake
+# 添加下面的内容
+rosidl_generate_interfaces(${PROJECT_NAME}
+  "msg/SelfTestMsg.msg"
+)
+```
+4. 修改配置文件,不然编译会报错
+```xml
+  <depend>rosidl_default_generators</depend>
+  <member_of_group>rosidl_interface_packages</member_of_group>
+```
+### 使用
+1. cmake中增加依赖
+```cmake
+# 自定义消息
+find_package(example_ros2_interfaces REQUIRED)
+ament_target_dependencies(node_01 rclcpp std_msgs example_ros2_interfaces)
+add_executable(node_02 src/node2.cpp)
+ament_target_dependencies(node_02 rclcpp std_msgs example_ros2_interfaces)
+```
+2. 代码中使用
+```cpp
+#include "example_ros2_interfaces/msg/self_test_msg.hpp"
+   auto publish2 = node->create_publisher<example_ros2_interfaces::msg::SelfTestMsg>("topic_02", 10);
+   auto timer2 = node->create_wall_timer(std::chrono::milliseconds(1000),
+                                       [&publish2, &count2,&node]() {
+                                         example_ros2_interfaces::msg::SelfTestMsg m;
+                                         m.status = count2++;
+                                         m.status_stop = 0;
+                                         publish2->publish(m);
+                                       }
+   );
+
 ```
